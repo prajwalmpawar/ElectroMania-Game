@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DAREVERSE — Spin. Dare. Connect.</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#08080D;
+    --panel:#101019;
+    --panel-line: rgba(180,190,255,0.10);
+    --blue:#3D6BFF;
+    --blue-soft:#6E8CFF;
+    --purple:#9B4DFF;
+    --magenta:#D64DFF;
+    --metal:#B9BFCF;
+    --metal-dim:#6A6F80;
+    --text:#EDEFF6;
+    --text-dim:#8B90A6;
+    --glow: 0 0 40px rgba(107,120,255,0.35);
+    --space-lg: 32px;
+    --space-md: 20px;
+    --space-sm: 12px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--void);
+    color:var(--text);
+    font-family:'Rajdhani',sans-serif;
+    overflow:hidden;
+  }
+  .screen{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden;
+    transition:opacity .5s ease;
+    overflow:hidden auto;
+  }
+  .screen.active{ opacity:1; visibility:visible; }
+
+  .grid-veil{
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(120,140,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(120,140,255,0.045) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 80%);
+    pointer-events:none;
+  }
+  .corner{ position:absolute; width:34px; height:34px; border:2px solid var(--metal-dim); opacity:0.7; }
+  .corner.tl{top:24px; left:24px; border-right:none; border-bottom:none;}
+  .corner.tr{top:24px; right:24px; border-left:none; border-bottom:none;}
+  .corner.bl{bottom:24px; left:24px; border-right:none; border-top:none;}
+  .corner.br{bottom:24px; right:24px; border-left:none; border-top:none;}
+  @media (max-width:640px){ .corner{ display:none; } }
+
+  .eyebrow{
+    font-family:'Space Mono',monospace; font-size:12px; letter-spacing:4px;
+    color:var(--blue-soft); text-transform:uppercase; display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{
+    content:''; width:7px;height:7px; background:var(--blue-soft);
+    box-shadow:0 0 10px var(--blue-soft); display:inline-block; border-radius:1px;
+    animation:pulse 2.4s infinite ease-in-out; flex-shrink:0;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.25;} }
+
+  .float-layer{ position:absolute; inset:0; pointer-events:none; z-index:1; overflow:hidden; }
+  .float-icon{
+    position:absolute; font-size:28px; opacity:0.14; filter:blur(0.2px);
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); }
+    50%{ transform:translateY(-40px) translateX(18px) rotate(15deg); }
+    100%{ transform:translateY(0) translateX(0) rotate(0deg); }
+  }
+
+  /* ================= SCREEN 1 — TEAM ENTRY ================= */
+  #entry{
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 28%, rgba(107,120,255,0.16), transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 85%, rgba(155,77,255,0.12), transparent 60%),
+      var(--void);
+  }
+  .entry-frame{
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center;
+    text-align:center; padding:48px 24px; max-width:480px; width:100%; margin:0 auto;
+  }
+  .brand-row{ display:flex; align-items:center; gap:14px; margin-bottom:var(--space-md); }
+  .brand-mark{ width:38px;height:38px; border:2px solid var(--blue-soft); transform:rotate(45deg); position:relative; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .brand-mark::after{ content:''; width:12px;height:12px; background:linear-gradient(135deg,var(--blue),var(--purple)); transform:rotate(-45deg); }
+  .brand-word{ font-family:'Orbitron',sans-serif; font-weight:700; letter-spacing:6px; font-size:15px; color:var(--metal); }
+  .brand-word span{ color:var(--blue-soft); }
+
+  .college-tag{
+    font-family:'Space Mono',monospace; font-size:11px; letter-spacing:2.5px; color:var(--text-dim);
+    margin-bottom:var(--space-lg); text-transform:uppercase; border-top:1px solid var(--panel-line);
+    border-bottom:1px solid var(--panel-line); padding:8px 22px; line-height:1.6;
+  }
+  h1.title{
+    font-family:'Orbitron',sans-serif; font-weight:900; font-size:clamp(34px,7vw,64px);
+    line-height:1.02; letter-spacing:1px;
+    background:linear-gradient(180deg,#FFFFFF 20%, var(--blue-soft) 70%, var(--purple) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 55px rgba(107,120,255,0.35)); margin-bottom:var(--space-sm);
+  }
+  p.subtitle{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:clamp(13px,2vw,17px);
+    letter-spacing:3px; text-transform:uppercase; color:var(--metal); margin-bottom:var(--space-lg);
+  }
+  p.subtitle b{ color:var(--blue-soft); font-weight:700; }
+
+  .id-card{
+    width:100%; background:linear-gradient(160deg, #14141F 0%, #0B0B12 100%);
+    border:1px solid var(--panel-line); border-radius:10px; padding:30px 26px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.02), 0 30px 60px -20px rgba(0,0,0,0.7), var(--glow);
+    display:flex; flex-direction:column; gap:18px;
+  }
+  .field{ display:flex; flex-direction:column; gap:8px; text-align:left; }
+  .field label{
+    font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:2.5px;
+    color:var(--blue-soft); text-transform:uppercase;
+  }
+  .field input{
+    background:rgba(255,255,255,0.03); border:1px solid var(--panel-line); border-radius:6px;
+    padding:14px 15px; color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:600;
+    font-size:17px; letter-spacing:0.5px; outline:none; transition:border-color .2s ease, box-shadow .2s ease;
+    width:100%;
+  }
+  .field input::placeholder{ color:var(--metal-dim); }
+  .field input:focus{ border-color:var(--blue); box-shadow:0 0 0 3px rgba(61,107,255,0.15); }
+
+  .cta-line{
+    font-family:'Orbitron',sans-serif; font-weight:700; font-size:14px; letter-spacing:4px;
+    color:var(--text); padding:15px 30px; border:1px solid var(--blue); border-radius:6px;
+    background:linear-gradient(180deg, rgba(61,107,255,0.16), rgba(61,107,255,0.03));
+    box-shadow:0 0 25px rgba(61,107,255,0.25); cursor:pointer; transition:transform .15s ease, box-shadow .2s ease;
+    width:100%;
+  }
+  .cta-line:hover{ transform:translateY(-2px); box-shadow:0 0 34px rgba(61,107,255,0.4); }
+  .cta-line:disabled{ opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+  .cta-line.secondary{
+    background:transparent; border-color:var(--panel-line); color:var(--text-dim);
+    box-shadow:none; font-size:12px; letter-spacing:3px; padding:12px 24px;
+  }
+  .cta-line.secondary:hover{ color:var(--blue-soft); border-color:var(--blue); box-shadow:none; }
+  .field-error{ font-family:'Space Mono',monospace; font-size:10.5px; color:var(--magenta); letter-spacing:1px; min-height:14px; text-align:left; }
+
+  .entry-footer{
+    position:absolute; bottom:24px; left:0; right:0; display:flex; justify-content:center;
+    font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:2px; color:var(--metal-dim);
+    text-transform:uppercase; z-index:2; text-align:center; padding:0 20px;
+  }
+
+  /* ================= SCREEN 2 — WAITING ROOM ================= */
+  #waiting{
+    background:
+      radial-gradient(ellipse 55% 55% at 50% 20%, rgba(155,77,255,0.14), transparent 65%),
+      var(--void);
+  }
+  .waiting-frame{
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center;
+    width:100%; max-width:640px; padding:56px 24px 40px; margin:0 auto;
+  }
+  .waiting-frame .eyebrow{ margin-bottom:var(--space-sm); justify-content:center; }
+  h2.waiting-title{
+    font-family:'Orbitron',sans-serif; font-weight:800; font-size:clamp(26px,5vw,40px);
+    letter-spacing:1.5px; color:var(--text); margin-bottom:8px; text-align:center;
+  }
+  h2.waiting-title span{ color:var(--purple); }
+  .team-counter{
+    font-family:'Space Mono',monospace; font-size:12.5px; letter-spacing:2.5px; color:var(--blue-soft);
+    text-transform:uppercase; margin-bottom:var(--space-lg); text-align:center;
+  }
+  .team-counter b{ color:var(--text); font-size:15px; }
+
+  .team-grid{
+    width:100%; display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr));
+    gap:14px; margin-bottom:var(--space-lg); max-height:38vh; overflow-y:auto; padding:4px 2px;
+  }
+  .team-card{
+    background:linear-gradient(160deg,#14141F,#0B0B12); border:1px solid var(--panel-line);
+    border-radius:10px; padding:18px 14px; display:flex; flex-direction:column; align-items:center;
+    gap:8px; text-align:center; animation:cardIn .5s cubic-bezier(.16,.9,.3,1) backwards;
+    box-shadow:0 14px 26px -14px rgba(0,0,0,0.6);
+  }
+  @keyframes cardIn{ from{ opacity:0; transform:translateY(14px) scale(0.95); } to{ opacity:1; transform:translateY(0) scale(1); } }
+  .team-card .t-icon{ font-size:30px; }
+  .team-card .t-name{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14.5px; color:var(--text);
+    letter-spacing:0.3px; word-break:break-word; line-height:1.3;
+  }
+  .team-card .t-tag{
+    font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1.5px; color:var(--text-dim);
+    text-transform:uppercase;
+  }
+
+  .status-line{
+    font-family:'Space Mono',monospace; font-size:12px; letter-spacing:2px; color:var(--text-dim);
+    text-transform:uppercase; margin-bottom:var(--space-md); text-align:center; min-height:16px;
+  }
+  .status-line.ready{ color:var(--blue-soft); }
+  .waiting-actions{ display:flex; gap:14px; width:100%; max-width:360px; flex-wrap:wrap; justify-content:center; }
+  .waiting-actions .cta-line{ flex:1; min-width:150px; }
+
+  .empty-note{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:14.5px; color:var(--text-dim);
+    text-align:center; padding:20px 0 30px;
+  }
+
+  /* ================= SCREEN 3 — WHEEL ================= */
+  #wheel-page{
+    background:
+      radial-gradient(ellipse 55% 55% at 50% 45%, rgba(155,77,255,0.14), transparent 65%),
+      var(--void);
+  }
+  .wheel-header{ position:absolute; top:36px; left:0; right:0; text-align:center; z-index:3; padding:0 20px; }
+  .wheel-header h2{
+    font-family:'Orbitron',sans-serif; font-weight:800; font-size:clamp(22px,4vw,34px);
+    letter-spacing:2px; color:var(--text);
+  }
+  .wheel-header h2 span{ color:var(--purple); }
+  .wheel-header p{
+    margin-top:8px; font-family:'Space Mono',monospace; font-size:11.5px; letter-spacing:2.5px;
+    color:var(--text-dim); text-transform:uppercase; display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  #turnIcon{ font-size:16px; }
+  #playerTag{ color:var(--blue-soft); font-weight:700; }
+
+  .wheel-stage{
+    position:relative; z-index:2;
+    width:min(460px, 66vw); height:min(460px, 66vw);
+    display:flex; align-items:center; justify-content:center; margin-top:26px;
+  }
+  @media (max-width:640px){ .wheel-stage{ width:min(340px,82vw); height:min(340px,82vw); margin-top:8px; } }
+  .wheel-shadow{ position:absolute; inset:0; border-radius:50%; box-shadow: 0 60px 90px -30px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.02); }
+  .pointer{
+    position:absolute; top:-26px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:16px solid transparent; border-right:16px solid transparent;
+    border-top:28px solid var(--metal); filter:drop-shadow(0 6px 10px rgba(0,0,0,0.6)); z-index:6;
+    transition:transform .18s ease;
+  }
+  .pointer.bounce{ animation:pointerBounce .5s ease; }
+  @keyframes pointerBounce{ 0%,100%{ transform:translateX(-50%) rotate(0deg); } 30%{ transform:translateX(-50%) rotate(-9deg); } 60%{ transform:translateX(-50%) rotate(6deg); } }
+  .pointer::after{
+    content:''; position:absolute; top:-30px; left:-6px; width:12px;height:12px;border-radius:50%;
+    background:var(--metal); box-shadow:0 0 10px rgba(255,255,255,0.4);
+  }
+  .wheel-rim{
+    position:relative; width:100%; height:100%; border-radius:50%; padding:14px;
+    background:
+      conic-gradient(from 0deg,
+        #dfe3ee 0deg, #9aa1b8 25deg, #dfe3ee 50deg, #74798c 75deg,
+        #dfe3ee 100deg, #9aa1b8 125deg, #dfe3ee 150deg, #74798c 175deg,
+        #dfe3ee 200deg, #9aa1b8 225deg, #dfe3ee 250deg, #74798c 275deg,
+        #dfe3ee 300deg, #9aa1b8 325deg, #dfe3ee 350deg, #dfe3ee 360deg);
+    box-shadow: inset 0 4px 8px rgba(255,255,255,0.5), inset 0 -6px 14px rgba(0,0,0,0.5);
+  }
+  .wheel{
+    width:100%; height:100%; border-radius:50%; position:relative; overflow:hidden;
+    transition: transform 4.5s cubic-bezier(.12,.72,.14,1);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.55), inset 0 0 0 2px rgba(255,255,255,0.06);
+  }
+  .wheel::before{
+    content:''; position:absolute; inset:0;
+    background: repeating-conic-gradient(rgba(0,0,0,0) 0deg 35.4deg, rgba(0,0,0,0.28) 35.4deg 36deg);
+    pointer-events:none;
+  }
+  .wheel::after{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    background: radial-gradient(circle at 38% 30%, rgba(255,255,255,0.22), transparent 45%);
+    pointer-events:none;
+  }
+  .seg{
+    position:absolute; top:50%; left:50%; width:50%; height:2px; transform-origin:left center;
+    display:flex; align-items:center; justify-content:flex-end; padding-right:22px; gap:6px;
+  }
+  .seg .icon{ font-size:16px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+  .seg .label{
+    font-family:'Rajdhani',sans-serif; font-weight:700; font-size:10.5px; letter-spacing:0.3px;
+    color:#F2F3FA; text-transform:uppercase; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,0.6);
+  }
+
+  .hub{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:112px;height:112px; border-radius:50%; z-index:8; display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    background: radial-gradient(circle at 35% 30%, #eef0f8, #b9bfcf 45%, #6a6f80 100%);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.55), inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -6px 10px rgba(0,0,0,0.35);
+    transition:transform .15s ease;
+  }
+  @media (max-width:640px){ .hub{ width:88px; height:88px; } .hub-inner{ width:66px !important; height:66px !important; } }
+  .hub:hover{ transform:translate(-50%,-50%) scale(1.03); }
+  .hub:active{ transform:translate(-50%,-50%) scale(0.96); }
+  .hub.disabled{ pointer-events:none; opacity:0.5; }
+  .hub-inner{
+    width:84px;height:84px;border-radius:50%; background:linear-gradient(160deg,#171722,#0A0A10);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,0.06), 0 0 30px rgba(107,120,255,0.35);
+  }
+  .hub-inner span{
+    font-family:'Orbitron',sans-serif; font-weight:800; font-size:12px; letter-spacing:1.5px;
+    color:var(--text); text-align:center; line-height:1.3;
+  }
+
+  .wheel-footer{
+    position:absolute; bottom:22px; left:0; right:0; text-align:center;
+    font-family:'Space Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--metal-dim);
+    text-transform:uppercase; z-index:3; padding:0 20px;
+  }
+  .finish-link{
+    position:absolute; top:30px; right:30px; z-index:5;
+    font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:2px; color:var(--text-dim);
+    text-transform:uppercase; cursor:pointer; border:1px solid var(--panel-line); padding:10px 15px; border-radius:6px;
+    background:rgba(16,16,25,0.55); transition:color .2s ease, border-color .2s ease;
+  }
+  .finish-link:hover{ color:var(--blue-soft); border-color:var(--blue); }
+  @media (max-width:640px){ .finish-link{ top:16px; right:16px; padding:8px 11px; font-size:9px; letter-spacing:1.5px; } }
+
+  /* ================= DARE REVEAL MODAL ================= */
+  .dare-modal{
+    position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center;
+    background:rgba(4,4,8,0.72); backdrop-filter:blur(6px); padding:20px;
+    opacity:0; visibility:hidden; transition:opacity .35s ease;
+  }
+  .dare-modal.active{ opacity:1; visibility:visible; }
+  .dare-card{
+    width:min(440px,100%); background:linear-gradient(165deg,#14141F,#0A0A11);
+    border:1px solid var(--panel-line); border-radius:16px; padding:36px 28px 28px;
+    text-align:center; position:relative; box-shadow:0 40px 90px -30px rgba(0,0,0,0.8), var(--glow);
+    transform:translateY(16px) scale(0.96); transition:transform .35s ease;
+  }
+  .dare-modal.active .dare-card{ transform:translateY(0) scale(1); }
+
+  .avatar-orb{
+    width:112px; height:112px; border-radius:50%; margin:0 auto 8px;
+    display:flex; align-items:center; justify-content:center; font-size:50px;
+    position:relative; animation:bob 2.6s ease-in-out infinite;
+    box-shadow: inset 0 -10px 20px rgba(0,0,0,0.35), inset 0 8px 16px rgba(255,255,255,0.25), 0 20px 40px -12px rgba(0,0,0,0.6);
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0) rotate(-2deg); } 50%{ transform:translateY(-10px) rotate(2deg); } }
+  .avatar-name{
+    font-family:'Space Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--blue-soft);
+    text-transform:uppercase; margin-bottom:20px;
+  }
+  .speech-bubble{
+    background:rgba(110,140,255,0.07); border:1px solid var(--panel-line); border-radius:12px;
+    padding:20px 20px; margin-bottom:22px; position:relative;
+  }
+  .dare-icon{ font-size:32px; margin-bottom:10px; display:block; }
+  .dare-name{
+    font-family:'Orbitron',sans-serif; font-weight:800; font-size:19px; letter-spacing:0.5px;
+    color:var(--text); margin-bottom:12px; line-height:1.3;
+  }
+  .dare-idea{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:15.5px; color:var(--metal);
+    line-height:1.55;
+  }
+  .dare-actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-top:4px; }
+  .btn{
+    font-family:'Orbitron',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:2px;
+    padding:13px 20px; border-radius:6px; cursor:pointer; text-transform:uppercase;
+    transition:transform .15s ease, box-shadow .2s ease; border:1px solid var(--blue);
+    background:linear-gradient(180deg, rgba(61,107,255,0.16), rgba(61,107,255,0.03)); color:var(--text);
+  }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn.ghost{ border-color:var(--panel-line); background:transparent; color:var(--text-dim); }
+  .btn.ghost:hover{ color:var(--metal); border-color:var(--metal-dim); }
+
+  /* ================= SCREEN 4 — FEEDBACK ================= */
+  #feedback{
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 25%, rgba(214,77,255,0.14), transparent 65%),
+      var(--void);
+  }
+  .fb-frame{
+    position:relative; z-index:2; display:flex; flex-direction:column; align-items:center;
+    text-align:center; padding:44px 24px; max-width:560px; width:100%; margin:0 auto;
+  }
+  .fb-avatar{
+    width:132px; height:132px; border-radius:50%; margin-bottom:10px; display:flex; align-items:center; justify-content:center;
+    font-size:58px; animation:bob 2.8s ease-in-out infinite;
+    box-shadow: inset 0 -12px 24px rgba(0,0,0,0.35), inset 0 10px 20px rgba(255,255,255,0.25), 0 24px 50px -14px rgba(0,0,0,0.65);
+  }
+  .fb-frame .eyebrow{ margin-bottom:14px; justify-content:center; }
+  .fb-frame h2{
+    font-family:'Orbitron',sans-serif; font-weight:900; font-size:clamp(28px,5.5vw,44px);
+    margin:6px 0 12px;
+    background:linear-gradient(180deg,#FFFFFF 20%, var(--blue-soft) 70%, var(--purple) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .fb-frame p.msg{
+    font-family:'Rajdhani',sans-serif; font-weight:600; font-size:16.5px; color:var(--metal);
+    line-height:1.6; margin-bottom:24px; max-width:440px;
+  }
+  .fb-table{
+    width:100%; border:1px solid var(--panel-line); border-radius:10px; overflow:hidden;
+    margin-bottom:28px; background:linear-gradient(160deg,#12121B,#0A0A11);
+  }
+  .fb-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:13px 18px; border-bottom:1px solid var(--panel-line);
+  }
+  .fb-row:last-child{ border-bottom:none; }
+  .fb-row .fr-name{ display:flex; align-items:center; gap:10px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14.5px; color:var(--text); text-align:left; }
+  .fb-row .fr-count{ font-family:'Space Mono',monospace; font-size:12px; letter-spacing:1.5px; color:var(--blue-soft); text-transform:uppercase; white-space:nowrap; }
+  .fb-stats{
+    font-family:'Space Mono',monospace; font-size:12px; letter-spacing:2px; color:var(--blue-soft);
+    text-transform:uppercase; margin-bottom:26px;
+  }
+  .confetti{ position:absolute; top:-20px; font-size:20px; animation:fall linear infinite; }
+  @keyframes fall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(110vh) rotate(360deg); opacity:0.4; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .float-icon, .avatar-orb, .fb-avatar, .confetti, .team-card{ animation:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SCREEN 1 — TEAM ENTRY ============ -->
+<section class="screen active" id="entry">
+  <div class="grid-veil"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+
+  <div class="entry-frame">
+    <div class="brand-row">
+      <div class="brand-mark"></div>
+      <div class="brand-word">DARE<span>VERSE</span></div>
+    </div>
+    <div class="college-tag">KLE Society's P.C. Jabin Science College — Orientation 2026</div>
+    <h1 class="title">ENTER YOUR<br>TEAM NAME</h1>
+    <p class="subtitle">One name. <b>One spot in the arena.</b></p>
+
+    <div class="id-card">
+      <div class="field">
+        <label for="teamNameInput">Team Name</label>
+        <input id="teamNameInput" type="text" placeholder="e.g. Voltage Vikings" maxlength="26" autocomplete="off">
+      </div>
+      <div class="field-error" id="entryError"></div>
+      <button class="cta-line" id="joinBtn">JOIN GAME</button>
+    </div>
+  </div>
+  <div class="entry-footer">Orientation Week · Game Stall Experience · Team-Based Dares</div>
+</section>
+
+<!-- ============ SCREEN 2 — WAITING ROOM ============ -->
+<section class="screen" id="waiting">
+  <div class="grid-veil"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+
+  <div class="waiting-frame">
+    <div class="eyebrow">Dareverse · Waiting Room</div>
+    <h2 class="waiting-title">TEAMS <span>JOINED</span></h2>
+    <div class="team-counter"><b id="teamCountNum">0</b> Teams Joined</div>
+
+    <div class="team-grid" id="teamGrid"></div>
+    <div class="empty-note" id="emptyNote" style="display:none;">No teams yet — be the first to join the arena.</div>
+
+    <div class="status-line" id="statusLine">Waiting for more teams...</div>
+
+    <div class="waiting-actions">
+      <button class="cta-line secondary" id="addTeamBtn">+ Add Another Team</button>
+      <button class="cta-line" id="startGameBtn" disabled>START GAME</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 3 — WHEEL ============ -->
+<section class="screen" id="wheel-page">
+  <div class="grid-veil"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+  <div class="float-layer" id="floatLayer"></div>
+  <div class="finish-link" id="finishBtn">Finish &amp; Get Feedback</div>
+
+  <div class="wheel-header">
+    <div class="eyebrow" style="justify-content:center;">Dareverse · Live Session</div>
+    <h2>THE DARE <span>WHEEL</span></h2>
+    <p><span id="turnIcon">⚡</span> <span id="playerTag">Team</span>'s turn to spin</p>
+  </div>
+
+  <div class="wheel-stage">
+    <div class="wheel-shadow"></div>
+    <div class="pointer" id="pointerEl"></div>
+    <div class="wheel-rim">
+      <div class="wheel" id="wheel"></div>
+    </div>
+    <div class="hub" id="spinBtn">
+      <div class="hub-inner"><span>SPIN<br>NOW</span></div>
+    </div>
+  </div>
+
+  <div class="wheel-footer">Dareverse Game Stall · Orientation Week 2026</div>
+</section>
+
+<!-- DARE REVEAL MODAL -->
+<div class="dare-modal" id="dareModal">
+  <div class="dare-card">
+    <div class="avatar-orb" id="avatarOrb"></div>
+    <div class="avatar-name" id="avatarName">COACH ZIGGY</div>
+    <div class="speech-bubble">
+      <span class="dare-icon" id="dareIcon">🔥</span>
+      <div class="dare-name" id="dareName">Sing a Song</div>
+      <div class="dare-idea" id="dareIdea">Belt out the chorus of your favorite song like it's a concert.</div>
+    </div>
+    <div class="dare-actions">
+      <button class="btn" id="doneBtn">Dare Done — Next Team</button>
+      <button class="btn ghost" id="modalFinishBtn">Finish Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SCREEN 4 — FEEDBACK ============ -->
+<section class="screen" id="feedback">
+  <div class="grid-veil"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+  <div class="float-layer" id="confettiLayer"></div>
+
+  <div class="fb-frame">
+    <div class="fb-avatar" id="fbAvatar"></div>
+    <div class="eyebrow">Dareverse · Session Complete</div>
+    <h2 id="fbHeadline">Thank You, Teams!</h2>
+    <p class="msg" id="fbMessage">Every team brought the energy today.</p>
+    <div class="fb-table" id="fbTable"></div>
+    <div class="fb-stats" id="fbStats">0 Dares Completed</div>
+    <button class="cta-line" id="playAgainBtn">PLAY AGAIN</button>
+  </div>
+</section>
+
+<script>
+(function(){
+
+  /* =========================================================
+     DARE DATA — original, human-written, Electronics/college flavored
+     ========================================================= */
+  const DARE_POOL = [
+    { icon:'⚡', label:'Op-Amp Energy', ideas:[
+        "Convince the group you can explain what a transformer does using only sound effects.",
+        "Somebody just asked what resistor color code you are. Answer with a straight face.",
+        "The multimeter in your pocket just beeped. React like it's a phone call from your professor."
+      ]},
+    { icon:'🍟', label:'Canteen Legend', ideas:[
+        "You've got till the samosa gets cold to tell the funniest lab-report excuse you've ever heard, real or invented.",
+        "Order an imaginary chai and negotiate the price like it's a group project deadline.",
+        "Sambar just landed on your notes. Perform all five stages of grief in ten seconds."
+      ]},
+    { icon:'🥼', label:'Lab Coat Drama', ideas:[
+        "A short circuit just fried your patience. Show us your best 'why is nothing working' face.",
+        "Your breadboard connections got blamed for the whole circuit failing. Defend your honor.",
+        "The oscilloscope is showing pure chaos and somehow it's still your fault. React accordingly."
+      ]},
+    { icon:'🧠', label:'Undercover Topper', ideas:[
+        "Recite the periodic table like you're reading out wedding invitations.",
+        "Explain Ohm's Law to a confused fresher using only hand gestures.",
+        "Pretend you just aced a viva you clearly didn't study for. Sell it."
+      ]},
+    { icon:'📏', label:'Height Wars', ideas:[
+        "Find the tallest person nearby and try to convince them you're secretly taller.",
+        "Stand back to back with a stranger and settle who's the real senior here.",
+        "Announce your height like it's a breaking news headline."
+      ]},
+    { icon:'🔌', label:'Gadget Pitch', ideas:[
+        "You've got fifteen seconds to invent the world's most pointless electronic gadget — pitch it like a startup founder.",
+        "Sell a broken calculator to the group like it's the future of technology.",
+        "Describe your dream invention. Bonus points if it runs on canteen chai."
+      ]},
+    { icon:'😅', label:'Viva Panic', ideas:[
+        "Give your best 'I forgot everything the second I walked in' face. The crowd decides if it's Oscar-worthy.",
+        "Pretend the examiner just asked your worst-case question. Freeze exactly like you would for real.",
+        "Answer an invisible viva question with total confidence and zero actual content."
+      ]},
+    { icon:'🤝', label:'Not-So-Stranger', ideas:[
+        "Pick someone you've never spoken to and find one weirdly specific thing you both have in common.",
+        "Walk up to someone new and guess their favorite subject. Wrong guess? Try again.",
+        "Trade names with a stranger, immediately forget it, then guess it back in five seconds."
+      ]},
+    { icon:'🤖', label:'Robo Malfunction', ideas:[
+        "Pretend your battery's at two percent and power down mid-sentence.",
+        "Move like your circuits just crossed and nothing is syncing right.",
+        "Reboot yourself dramatically in front of the whole crowd."
+      ]},
+    { icon:'🎤', label:'Mic Drop Moment', ideas:[
+        "Introduce your team like a stadium announcer hyping up the biggest match of the year.",
+        "Deliver a thank-you speech for winning an award that doesn't exist.",
+        "Narrate your own entrance like you're the main character walking into a party."
+      ]},
+    { icon:'🤫', label:'Silent Treatment', ideas:[
+        "Explain what a capacitor does using zero words, only actions.",
+        "Order food at an imaginary canteen counter without saying a single word.",
+        "Convince your team you're upset with them using only facial expressions."
+      ]},
+    { icon:'📋', label:'Group Project Flashback', ideas:[
+        "Recreate the exact face you make when a groupmate says 'I'll finish my part tonight.'",
+        "Perform the classic 'who submitted the wrong file' panic in ten seconds.",
+        "Give the speech you'd give if a teammate copied your entire assignment."
+      ]},
+    { icon:'👓', label:'Fashion Sense, Questionable', ideas:[
+        "Strike a pose like you're on the cover of a magazine nobody reads.",
+        "Model your ID card lanyard like it's the season's hottest accessory.",
+        "Walk the corridor like you own it, even though you clearly don't."
+      ]},
+    { icon:'🎲', label:'Chaos Theory', ideas:[
+        "Whatever the crowd shouts right now, you're doing it. No negotiating.",
+        "Spin in place three times, then strike whatever pose you land on.",
+        "Let your teammate pick your next move. You don't get a say."
+      ]}
+  ];
+
+  const AVATARS = [
+    { name:'COACH ZIGGY', face:'🤖', from:'#3D6BFF', to:'#101019' },
+    { name:'MC BLAZE', face:'🦸', from:'#D64DFF', to:'#101019' },
+    { name:'DJ NOVA', face:'🥳', from:'#9B4DFF', to:'#101019' },
+    { name:'REF KAI', face:'🧑\u200d🚀', from:'#3D6BFF', to:'#101019' },
+    { name:'HOST LUNA', face:'🎬', from:'#D64DFF', to:'#101019' },
+    { name:'CAPTAIN ARC', face:'🥷', from:'#9B4DFF', to:'#101019' },
+  ];
+
+  const TEAM_ICONS = ['⚡','🔋','💡','⚙️','🔌','🎛️','🔧','📡','🧲','🔦','🛠️','🧪'];
+  const WHEEL_COLORS = ['#2740A6','#4C1D95','#6D28D9','#3730A3','#8B2FCB','#2740A6','#5B21B6','#4338CA','#7C3AED','#351E7A','#4C1D95','#6D28D9'];
+  const MIN_TEAMS = 2;
+  const SEGMENTS_ON_WHEEL = 10;
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  /* =========================================================
+     STATE
+     ========================================================= */
+  const state = {
+    teams: [],          // {id, name, icon, dares:0}
+    currentTeamIndex: 0,
+    wheelOrder: [],      // current segments on the wheel
+    wheelRotation: 0,
+    spinning: false,
+    pendingIndex: -1     // index into wheelOrder selected for the in-flight spin
+  };
+
+  /* =========================================================
+     NAVIGATION
+     ========================================================= */
+  const screens = {
+    entry: document.getElementById('entry'),
+    waiting: document.getElementById('waiting'),
+    wheel: document.getElementById('wheel-page'),
+    feedback: document.getElementById('feedback')
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  /* =========================================================
+     BACKGROUND FLOAT ICONS
+     ========================================================= */
+  function seedFloatLayer(el, icons, count){
+    el.innerHTML = '';
+    for(let i=0;i<count;i++){
+      const span = document.createElement('span');
+      span.className = 'float-icon';
+      span.textContent = pick(icons);
+      span.style.left = Math.random()*94 + '%';
+      span.style.top = Math.random()*90 + '%';
+      span.style.fontSize = (18 + Math.random()*26) + 'px';
+      span.style.animationDuration = (5 + Math.random()*7) + 's';
+      span.style.animationDelay = (Math.random()*4) + 's';
+      el.appendChild(span);
+    }
+  }
+  seedFloatLayer(document.getElementById('floatLayer'), DARE_POOL.map(d=>d.icon), 20);
+
+  function launchConfetti(){
+    const layer = document.getElementById('confettiLayer');
+    layer.innerHTML = '';
+    const bits = ['🎉','✨','🎊','⭐','💥'];
+    for(let i=0;i<28;i++){
+      const span = document.createElement('span');
+      span.className = 'confetti';
+      span.textContent = pick(bits);
+      span.style.left = Math.random()*100 + '%';
+      span.style.animationDuration = (3 + Math.random()*3) + 's';
+      span.style.animationDelay = (Math.random()*2.5) + 's';
+      span.style.fontSize = (14 + Math.random()*14) + 'px';
+      layer.appendChild(span);
+    }
+  }
+
+  /* =========================================================
+     TEAM REGISTRATION
+     ========================================================= */
+  const teamNameInput = document.getElementById('teamNameInput');
+  const entryError = document.getElementById('entryError');
+
+  function registerTeam(){
+    const name = teamNameInput.value.trim();
+    if(!name){
+      entryError.textContent = 'Enter a team name to continue.';
+      return;
+    }
+    const duplicate = state.teams.some(t => t.name.toLowerCase() === name.toLowerCase());
+    if(duplicate){
+      entryError.textContent = 'That team name is already taken — try another.';
+      return;
+    }
+    entryError.textContent = '';
+    const usedIcons = state.teams.map(t => t.icon);
+    let availableIcons = TEAM_ICONS.filter(ic => !usedIcons.includes(ic));
+    if(availableIcons.length === 0) availableIcons = TEAM_ICONS;
+    const icon = pick(availableIcons);
+
+    state.teams.push({
+      id: 'team_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+      name,
+      icon,
+      dares: 0
+    });
+    teamNameInput.value = '';
+    renderWaitingRoom();
+    showScreen('waiting');
+  }
+
+  document.getElementById('joinBtn').addEventListener('click', registerTeam);
+  teamNameInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') registerTeam(); });
+
+  /* =========================================================
+     WAITING ROOM
+     ========================================================= */
+  const teamGrid = document.getElementById('teamGrid');
+  const teamCountNum = document.getElementById('teamCountNum');
+  const statusLine = document.getElementById('statusLine');
+  const startGameBtn = document.getElementById('startGameBtn');
+  const emptyNote = document.getElementById('emptyNote');
+
+  function renderWaitingRoom(){
+    teamGrid.innerHTML = '';
+    emptyNote.style.display = state.teams.length === 0 ? 'block' : 'none';
+    state.teams.forEach((team, i) => {
+      const card = document.createElement('div');
+      card.className = 'team-card';
+      card.style.animationDelay = (i * 0.05) + 's';
+      card.innerHTML = `
+        <span class="t-icon">${team.icon}</span>
+        <span class="t-name">${escapeHTML(team.name)}</span>
+        <span class="t-tag">Team ${String(i+1).padStart(2,'0')}</span>
+      `;
+      teamGrid.appendChild(card);
+    });
+    teamCountNum.textContent = state.teams.length;
+
+    const remaining = MIN_TEAMS - state.teams.length;
+    if(remaining > 0){
+      statusLine.textContent = `Waiting for ${remaining} more team${remaining===1?'':'s'}...`;
+      statusLine.classList.remove('ready');
+      startGameBtn.disabled = true;
+    } else {
+      statusLine.textContent = 'Ready to Start';
+      statusLine.classList.add('ready');
+      startGameBtn.disabled = false;
+    }
+  }
+
+  function escapeHTML(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.getElementById('addTeamBtn').addEventListener('click', ()=>{
+    entryError.textContent = '';
+    showScreen('entry');
+    teamNameInput.focus();
+  });
+
+  document.getElementById('startGameBtn').addEventListener('click', ()=>{
+    if(state.teams.length < MIN_TEAMS) return;
+    state.currentTeamIndex = 0;
+    updateTurnHeader();
+    newWheelRound();
+    showScreen('wheel');
+  });
+
+  /* =========================================================
+     WHEEL LOGIC — rebuilt so the selected index is chosen FIRST,
+     the wheel is rotated to land exactly on that index, and every
+     downstream consumer (popup, history, stats) reads that same
+     stored index. No recomputation from rotation angle, anywhere.
+     ========================================================= */
+  const wheelEl = document.getElementById('wheel');
+  const spinBtn = document.getElementById('spinBtn');
+  const pointerEl = document.getElementById('pointerEl');
+
+  function buildWheel(order){
+    wheelEl.innerHTML = '';
+    const segAngle = 360 / order.length;
+    const stops = order.map((d,i)=> `${WHEEL_COLORS[i % WHEEL_COLORS.length]} ${i*segAngle}deg ${(i+1)*segAngle}deg`).join(', ');
+    wheelEl.style.background = `conic-gradient(from 0deg, ${stops})`;
+    order.forEach((d,i)=>{
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      const angle = segAngle*i + segAngle/2;
+      seg.style.transform = `rotate(${angle}deg)`;
+      seg.innerHTML = `<span class="label">${d.label}</span><span class="icon">${d.icon}</span>`;
+      wheelEl.appendChild(seg);
+    });
+  }
+
+  function newWheelRound(){
+    state.wheelOrder = shuffle(DARE_POOL).slice(0, SEGMENTS_ON_WHEEL);
+    buildWheel(state.wheelOrder);
+  }
+
+  // Given a chosen segment index, return the rotation (in degrees, absolute,
+  // always greater than the wheel's current rotation) that will leave that
+  // exact segment centered under the fixed top pointer.
+  function computeRotationForIndex(index, order, currentRotation){
+    const segAngle = 360 / order.length;
+    const segCenterAngle = index * segAngle + segAngle / 2; // clockwise from top, unrotated
+    const neededFinalMod = (360 - segCenterAngle) % 360;     // rotation mod 360 that places it at top
+    const currentMod = ((currentRotation % 360) + 360) % 360;
+    const deltaToNeeded = ((neededFinalMod - currentMod) + 360) % 360;
+    const extraSpins = 5 + Math.floor(Math.random()*3);
+    return currentRotation + deltaToNeeded + extraSpins*360;
+  }
+
+  function spin(){
+    if(state.spinning) return;
+    if(state.teams.length === 0) return;
+    state.spinning = true;
+    spinBtn.classList.add('disabled');
+
+    // Reshuffle the wheel for this spin, then pick the winning index BEFORE
+    // any rotation math happens. This index is the single source of truth.
+    newWheelRound();
+    const selectedIndex = Math.floor(Math.random() * state.wheelOrder.length);
+    state.pendingIndex = selectedIndex;
+
+    wheelEl.style.transition = 'none';
+    wheelEl.style.transform = `rotate(${state.wheelRotation}deg)`;
+    void wheelEl.offsetWidth; // force reflow before re-enabling transition
+    wheelEl.style.transition = 'transform 4.5s cubic-bezier(.12,.72,.14,1)';
+
+    const targetRotation = computeRotationForIndex(selectedIndex, state.wheelOrder, state.wheelRotation);
+    state.wheelRotation = targetRotation;
+    wheelEl.style.transform = `rotate(${targetRotation}deg)`;
+
+    setTimeout(()=>{
+      state.spinning = false;
+      spinBtn.classList.remove('disabled');
+      pointerEl.classList.add('bounce');
+      setTimeout(()=> pointerEl.classList.remove('bounce'), 520);
+
+      // Read the SAME index that was used to compute rotation — no separate
+      // random selection, no recompute from angle.
+      const dare = state.wheelOrder[state.pendingIndex];
+      revealDare(dare);
+    }, 4700);
+  }
+  spinBtn.addEventListener('click', spin);
+
+  /* =========================================================
+     TURN MANAGEMENT
+     ========================================================= */
+  const playerTag = document.getElementById('playerTag');
+  const turnIcon = document.getElementById('turnIcon');
+
+  function updateTurnHeader(){
+    const team = state.teams[state.currentTeamIndex];
+    if(!team) return;
+    playerTag.textContent = team.name;
+    turnIcon.textContent = team.icon;
+  }
+
+  function advanceTurn(){
+    if(state.teams.length === 0) return;
+    state.currentTeamIndex = (state.currentTeamIndex + 1) % state.teams.length;
+    updateTurnHeader();
+  }
+
+  /* =========================================================
+     DARE REVEAL MODAL
+     ========================================================= */
+  const dareModal = document.getElementById('dareModal');
+
+  function revealDare(dare){
+    const avatar = pick(AVATARS);
+    const idea = pick(dare.ideas);
+    document.getElementById('avatarOrb').style.background = `radial-gradient(circle at 35% 30%, ${avatar.from}, ${avatar.to} 75%)`;
+    document.getElementById('avatarOrb').textContent = avatar.face;
+    document.getElementById('avatarName').textContent = avatar.name;
+    document.getElementById('dareIcon').textContent = dare.icon;
+    document.getElementById('dareName').textContent = dare.label;
+    document.getElementById('dareIdea').textContent = idea;
+
+    const team = state.teams[state.currentTeamIndex];
+    if(team) team.dares++;
+
+    dareModal.classList.add('active');
+  }
+
+  document.getElementById('doneBtn').addEventListener('click', ()=>{
+    dareModal.classList.remove('active');
+    advanceTurn();
+  });
+  document.getElementById('modalFinishBtn').addEventListener('click', ()=>{
+    dareModal.classList.remove('active');
+    goToFeedback();
+  });
+  document.getElementById('finishBtn').addEventListener('click', goToFeedback);
+
+  /* =========================================================
+     FEEDBACK
+     ========================================================= */
+  function goToFeedback(){
+    const avatar = pick(AVATARS);
+    document.getElementById('fbAvatar').style.background = `radial-gradient(circle at 35% 30%, ${avatar.from}, ${avatar.to} 75%)`;
+    document.getElementById('fbAvatar').textContent = avatar.face;
+
+    const totalDares = state.teams.reduce((sum,t)=> sum + t.dares, 0);
+    document.getElementById('fbHeadline').textContent = `Thank You, Teams!`;
+    document.getElementById('fbMessage').textContent = `${state.teams.length} teams took the stage and made the arena loud. Here's how everyone did.`;
+    document.getElementById('fbStats').textContent = `${totalDares} Dare${totalDares===1?'':'s'} Completed Overall`;
+
+    const table = document.getElementById('fbTable');
+    table.innerHTML = '';
+    const ranked = state.teams.slice().sort((a,b)=> b.dares - a.dares);
+    ranked.forEach(team=>{
+      const row = document.createElement('div');
+      row.className = 'fb-row';
+      row.innerHTML = `
+        <span class="fr-name"><span>${team.icon}</span> ${escapeHTML(team.name)}</span>
+        <span class="fr-count">${team.dares} Dare${team.dares===1?'':'s'}</span>
+      `;
+      table.appendChild(row);
+    });
+
+    launchConfetti();
+    showScreen('feedback');
+  }
+
+  document.getElementById('playAgainBtn').addEventListener('click', ()=>{
+    state.teams = [];
+    state.currentTeamIndex = 0;
+    state.wheelRotation = 0;
+    state.pendingIndex = -1;
+    teamNameInput.value = '';
+    entryError.textContent = '';
+    renderWaitingRoom();
+    showScreen('entry');
+  });
+
+  /* init */
+  renderWaitingRoom();
+})();
+</script>
+</body>
+</html>
