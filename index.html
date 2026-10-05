@@ -835,7 +835,6 @@
     if(kind==='land'){tone(520,.07,'triangle',.045);tone(360,.09,'triangle',.055,.07);tone(180,.16,'triangle',.07,.16);}
     if(kind==='reveal'){
       tone(980,.05,'square',.035);tone(720,.08,'square',.035,.06);tone(480,.12,'sawtooth',.045,.14);
-      try{ if('speechSynthesis' in window){ const u=new SpeechSynthesisUtterance('FAHHHHHH!'); u.rate=1.35; u.pitch=.45; u.volume=.72; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } }catch(e){}
     }
     if(kind==='success'){tone(523,.08,'sine',.055);tone(659,.08,'sine',.055,.08);tone(784,.12,'sine',.07,.16);tone(1046,.22,'sine',.08,.28);}
     if(kind==='join'){tone(440,.06,'square',.025);tone(660,.09,'square',.035,.07);}
